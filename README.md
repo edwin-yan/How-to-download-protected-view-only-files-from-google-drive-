@@ -1,17 +1,70 @@
 # How-to-download-protected-view-only-files-from-google-drive??
 
-1. Open or Preview Any view-only or protected files from google drive.
+New Code:
+```
+(async function () {
+  console.log("Loading jsPDF...");
 
-2. Open Developer Console.
-    If you are previewing in Google Chrome or Firefox
-    Press Shift + Ctrl + J ( on Windows / Linux) or Option + ⌘  + J (on Mac)
-    If you are previewing in Microsoft Edge 
-    Press Shift + Ctrl + I 
-    If you are previewing in Apple Safari
-    Press Option + ⌘ + C
-    Then you will find yourself inside the developer tools.
-    
-3.  Navigate to the "Console" tab.
+  const script = document.createElement("script");
+  script.src = "https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js";
+  document.body.appendChild(script);
+
+  await new Promise(res => script.onload = res);
+  const { jsPDF } = window.jspdf;
+
+  const imgs = [...document.images].filter(img =>
+    img.src.startsWith("blob:https://drive.google.com/")
+  );
+
+  if (!imgs.length) {
+    console.warn("No valid images found");
+    return;
+  }
+
+  let pdf;
+
+  for (let i = 0; i < imgs.length; i++) {
+    const img = imgs[i];
+
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const orientation = w > h ? "l" : "p";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+    // JPEG is much faster & smaller than PNG
+    const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+    if (i === 0) {
+      pdf = new jsPDF({
+        orientation,
+        unit: "px",
+        format: [w, h],
+      });
+    } else {
+      pdf.addPage([w, h], orientation);
+    }
+
+    pdf.addImage(imgData, "JPEG", 0, 0, w, h);
+
+    console.log(`Progress: ${Math.round(((i + 1) / imgs.length) * 100)}%`);
+  }
+
+  const title =
+    document.querySelector('meta[itemprop="name"]')?.content ||
+    document.title ||
+    "download";
+
+  pdf.save(title.endsWith(".pdf") ? title : title + ".pdf");
+})();
+
+
+
+```
 
 4.  Paste below code and press Enter:
 
@@ -37,8 +90,6 @@
         };
         jspdf.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js' ;
         document.body.appendChild(jspdf);
-
-5. Now, the pdf file start to download. This might take a few minutes depending on the file size.
 
 6. Alternative one:
 ```
