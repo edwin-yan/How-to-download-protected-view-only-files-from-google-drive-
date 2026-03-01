@@ -54,14 +54,31 @@ New Code:
     console.log(`Progress: ${Math.round(((i + 1) / imgs.length) * 100)}%`);
   }
 
-  const title =
-    document.querySelector('meta[itemprop="name"]')?.content ||
-    document.title ||
-    "download";
+  // --- UPDATED TITLE EXTRACTION LOGIC ---
+  let title = null;
+  
+  // 1. Try to grab it from the hidden JSON info div
+  const driveInfoNode = document.getElementById("drive-active-item-info");
+  if (driveInfoNode) {
+    try {
+      const driveInfo = JSON.parse(driveInfoNode.textContent);
+      title = driveInfo.title;
+    } catch (e) {
+      console.warn("Failed to parse drive-active-item-info JSON", e);
+    }
+  }
 
+  // 2. Fallbacks if the JSON div wasn't found or was missing the title
+  if (!title) {
+    title =
+      document.querySelector('meta[itemprop="name"]')?.content ||
+      document.title ||
+      "download";
+  }
+
+  // Ensure it has exactly one .pdf extension at the end
   pdf.save(title.endsWith(".pdf") ? title : title + ".pdf");
 })();
-
 
 
 ```
